@@ -9,15 +9,22 @@
 body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fafafa;color:#111}
 .card{text-align:center}
 h1{font-size:1.5rem;font-weight:600;letter-spacing:-.02em;margin-bottom:6px}
-.status{color:#666;font-size:.95rem;height:1.5em;margin-bottom:20px}
-.status strong{color:#111}
 .board{display:grid;grid-template-columns:repeat(3,96px);grid-template-rows:repeat(3,96px);gap:8px;justify-content:center}
-.cell{border:0;border-radius:14px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px #eee;font-size:2.2rem;font-weight:600;cursor:pointer;transition:transform .08s,box-shadow .15s,background .15s;color:#111;display:flex;align-items:center;justify-content:center}
+.cell{border:0;border-radius:14px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px #eee;font-size:2.2rem;font-weight:600;cursor:pointer;transition:transform .08s,box-shadow .15s,background .15s;color:#111;display:flex;align-items:center;justify-content:center;animation:cellIn .3s ease both}
 .cell:hover:not(:disabled){background:#f3f4f6;transform:translateY(-1px)}
+.cell:active:not(:disabled){transform:scale(.96)}
 .cell:disabled{cursor:default}
+.cell .mark{display:inline-block;animation:pop .22s cubic-bezier(.2,1.4,.4,1) both}
 .cell.x{color:#2563eb}
 .cell.o{color:#dc2626}
-.cell.win{background:#111;color:#fff}
+.cell.win{background:#111;color:#fff;animation:winPulse .6s ease-in-out infinite}
+.status{color:#666;font-size:.95rem;height:1.5em;margin-bottom:20px;transition:opacity .15s}
+.status strong{color:#111}
+.status.swap{opacity:0}
+@keyframes cellIn{from{opacity:0;transform:scale(.9) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes winPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.cell,.cell .mark,.cell.win{animation:none}.status{transition:none}}
 button.reset{margin-top:22px;padding:10px 22px;border-radius:999px;border:1px solid #dc2626;background:#dc2626;color:#fff;font-size:.9rem;cursor:pointer;transition:background .15s}
 button.reset:hover{background:#b91c1c;border-color:#b91c1c;color:#fff}
 .scores{display:flex;gap:24px;justify-content:center;margin-top:16px;font-size:.85rem;color:#666}
@@ -48,15 +55,16 @@ board.innerHTML='';
 cells.forEach((_,i)=>{
 const b=document.createElement('button');
 b.className='cell';b.onclick=()=>move(i,b);
+b.style.animationDelay=`${i*30}ms`;
 board.appendChild(b);
 });
-setStatus(`${turn}'s turn`);
+setStatus(`${turn}'s turn`,true);
 }
-function setStatus(t){status.innerHTML=t;}
+function setStatus(t,instant){if(instant){status.innerHTML=t;return;}status.classList.add('swap');setTimeout(()=>{status.innerHTML=t;status.classList.remove('swap');},120);}
 function move(i,btn){
 if(over||cells[i])return;
 cells[i]=turn;
-btn.textContent=turn;
+btn.innerHTML=`<span class="mark">${turn}</span>`;
 btn.classList.add(turn.toLowerCase());
 btn.disabled=true;
 const w=checkWin();
